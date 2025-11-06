@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Norse Mythology Cipher Solver</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .puzzle-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .encrypted-text {
+            font-family: 'Courier New', monospace;
+            font-size: 1.2em;
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            word-break: break-all;
+            line-height: 1.6;
+        }
+
+        .clue {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .clue h3 {
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
+
+        .clue-content {
+            font-style: italic;
+            line-height: 1.8;
+        }
+
+        .solver-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .control-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .control-group {
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 1em;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+        }
+
+        .result {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            min-height: 100px;
+        }
+
+        .result h3 {
+            color: #4CAF50;
+            margin-bottom: 15px;
+        }
+
+        .result-text {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            line-height: 1.6;
+            word-break: break-word;
+        }
+
+        .attempts {
+            margin-top: 30px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .attempt-item {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 3px solid #2196F3;
+        }
+
+        .attempt-header {
+            color: #2196F3;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: rgba(0,0,0,0.3);
+            border: none;
+            border-radius: 8px 8px 0 0;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: rgba(76, 175, 80, 0.3);
+            border-bottom: 3px solid #4CAF50;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .auto-solve-status {
+            background: rgba(255, 193, 7, 0.2);
+            border: 2px solid #FFC107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .success {
+            background: rgba(76, 175, 80, 0.3) !important;
+            border-color: #4CAF50 !important;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .solving {
+            animation: pulse 1.5s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Norse Mythology Cipher Solver</h1>
+
+        <div class="puzzle-section">
+            <h2>The Encrypted Challenge</h2>
+            <div class="encrypted-text" id="encryptedText">
+                XSCPRZLNDQKZUCPQXSDAWQLKBB LRBDMDTKAQYCZAVQOWMZ WUNBQLQMYFVMHWYQLGIHJFYOH OKDCAYSTWCMUJGNMFRSWBDM
+            </div>
+
+            <div class="clue">
+                <h3>Clue 1: The Norse Mythology Poem</h3>
+                <div class="clue-content">
+                    Beneath the ash, the wise one hung,<br>
+                    One eye lost where secrets run.<br>
+                    He drank the dark, the runes obeyed,<br>
+                    The price of knowing fully paid.<br><br>
+
+                    Then came the spark with a silver tongue,<br>
+                    Who bound the gods and broke their song.<br>
+                    Fire danced where truth once lay,<br>
+                    And laughter tore the night from day.<br><br>
+
+                    Two shadows flew from wisdom's mind,<br>
+                    To seek what mortals never find.<br>
+                    Thought and Memory crossed the sea,<br>
+                    Bearing whispers back to the tree.<br><br>
+
+                    Last, the shining son lay still,<br>
+                    The world grew cold, the air grew chill.<br>
+                    When light returns and bonds are cured,<br>
+                    The end begins — the word ensured.
+                </div>
+            </div>
+
+            <div class="clue">
+                <h3>Clue 2: The Operations</h3>
+                <div class="clue-content">
+                    <strong>Shift. Pair. Cross. Reflect. Mirror.</strong><br><br>
+                    Key hint: There are KEY components in the poem (Odin, Loki, Huginn & Muninn, Baldr)
+                </div>
+            </div>
+        </div>
+
+        <div class="solver-section">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('manual')">Manual Solver</button>
+                <button class="tab" onclick="switchTab('auto')">Auto Solver</button>
+                <button class="tab" onclick="switchTab('analysis')">Cipher Analysis</button>
+            </div>
+
+            <div id="manual" class="tab-content active">
+                <h2>Manual Decryption Tools</h2>
+                <div class="control-panel">
+                    <div class="control-group">
+                        <label>Cipher Type:</label>
+                        <select id="cipherType">
+                            <option value="vigenere">Vigenère Cipher</option>
+                            <option value="playfair">Playfair Cipher</option>
+                            <option value="caesar">Caesar Shift</option>
+                            <option value="columnar">Columnar Transposition</option>
+                            <option value="foursquare">Four-Square Cipher</option>
+                            <option value="bifid">Bifid Cipher</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Key/Password:</label>
+                        <input type="text" id="keyInput" placeholder="Enter decryption key">
+                        <button onclick="tryDecrypt()">Decrypt</button>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Try Norse Keywords:</label>
+                        <button onclick="tryKey('ODIN')">ODIN</button>
+                        <button onclick="tryKey('LOKI')">LOKI</button>
+                        <button onclick="tryKey('BALDR')">BALDR</button>
+                        <button onclick="tryKey('HUGINN')">HUGINN</button>
+                        <button onclick="tryKey('MUNINN')">MUNINN</button>
+                    </div>
+                </div>
+
+                <div class="result">
+                    <h3>Decrypted Result:</h3>
+                    <div class="result-text" id="manualResult">Try different cipher types and keys...</div>
+                </div>
+            </div>
+
+            <div id="auto" class="tab-content">
+                <h2>Automatic Solver</h2>
+                <p>This will try multiple approaches based on the clues:</p>
+                <button onclick="autoSolve()" style="width: auto; padding: 15px 40px; margin: 20px 0;">🚀 Start Auto-Solving</button>
+                <div id="autoStatus"></div>
+                <div class="attempts" id="attemptsList"></div>
+            </div>
+
+            <div id="analysis" class="tab-content">
+                <h2>Cipher Analysis</h2>
+                <div class="result">
+                    <h3>Text Statistics:</h3>
+                    <div id="analysisResult"></div>
+                </div>
+                <button onclick="analyzeText()">Analyze Encrypted Text</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const encryptedText = "XSCPRZLNDQKZUCPQXSDAWQLKBB LRBDMDTKAQYCZAVQOWMZ WUNBQLQMYFVMHWYQLGIHJFYOH OKDCAYSTWCMUJGNMFRSWBDM";
+        const cleanText = encryptedText.replace(/\s/g, '');
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        function vigenereDecrypt(text, key) {
+            key = key.toUpperCase().replace(/[^A-Z]/g, '');
+            if (!key) return text;
+
+            let result = '';
+            let keyIndex = 0;
+
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                if (char.match(/[A-Z]/)) {
+                    const shift = key.charCodeAt(keyIndex % key.length) - 65;
+                    const decrypted = String.fromCharCode(((char.charCodeAt(0) - 65 - shift + 26) % 26) + 65);
+                    result += decrypted;
+                    keyIndex++;
+                } else {
+                    result += char;
+                }
+            }
+            return result;
+        }
+
+        function caesarDecrypt(text, shift) {
+            let result = '';
+            for (let char of text) {
+                if (char.match(/[A-Z]/)) {
+                    result += String.fromCharCode(((char.charCodeAt(0) - 65 - shift + 26) % 26) + 65);
+                } else {
+                    result += char;
+                }
+            }
+            return result;
+        }
+
+        function playfairDecrypt(text, key) {
+            key = key.toUpperCase().replace(/[^A-Z]/g, '').replace(/J/g, 'I');
+            let matrix = createPlayfairMatrix(key);
+            let result = '';
+
+            text = text.replace(/[^A-Z]/g, '').replace(/J/g, 'I');
+
+            for (let i = 0; i < text.length - 1; i += 2) {
+                let a = text[i];
+                let b = text[i + 1] || 'X';
+
+                let posA = findInMatrix(matrix, a);
+                let posB = findInMatrix(matrix, b);
+
+                if (posA.row === posB.row) {
+                    result += matrix[posA.row][(posA.col - 1 + 5) % 5];
+                    result += matrix[posB.row][(posB.col - 1 + 5) % 5];
+                } else if (posA.col === posB.col) {
+                    result += matrix[(posA.row - 1 + 5) % 5][posA.col];
+                    result += matrix[(posB.row - 1 + 5) % 5][posB.col];
+                } else {
+                    result += matrix[posA.row][posB.col];
+                    result += matrix[posB.row][posA.col];
+                }
+            }
+
+            return result;
+        }
+
+        function createPlayfairMatrix(key) {
+            let alphabet = 'ABCDEFGHIKLMNOPQRSTUVWXYZ';
+            let used = new Set();
+            let matrix = [];
+            let chars = (key + alphabet).split('');
+
+            for (let char of chars) {
+                if (!used.has(char) && char.match(/[A-Z]/)) {
+                    used.add(char);
+                }
+            }
+
+            let usedArray = Array.from(used);
+            for (let i = 0; i < 5; i++) {
+                matrix.push(usedArray.slice(i * 5, (i + 1) * 5));
+            }
+
+            return matrix;
+        }
+
+        function findInMatrix(matrix, char) {
+            for (let row = 0; row < 5; row++) {
+                for (let col = 0; col < 5; col++) {
+                    if (matrix[row][col] === char) {
+                        return { row, col };
+                    }
+                }
+            }
+            return { row: 0, col: 0 };
+        }
+
+        function bifidDecrypt(text, key) {
+            const square = createPolybius(key);
+            text = text.replace(/[^A-Z]/g, '').replace(/J/g, 'I');
+
+            let row1 = [], col1 = [];
+
+            for (let char of text) {
+                let pos = findInPolybius(square, char);
+                row1.push(pos.row);
+                col1.push(pos.col);
+            }
+
+            let combined = row1.concat(col1);
+            let result = '';
+
+            for (let i = 0; i < combined.length - 1; i += 2) {
+                result += square[combined[i]][combined[i + 1]];
+            }
+
+            return result;
+        }
+
+        function createPolybius(key) {
+            let alphabet = 'ABCDEFGHIKLMNOPQRSTUVWXYZ';
+            key = key.toUpperCase().replace(/[^A-Z]/g, '').replace(/J/g, 'I');
+            let used = new Set();
+            let square = [];
+            let chars = (key + alphabet).split('');
+
+            for (let char of chars) {
+                if (!used.has(char) && char.match(/[A-Z]/)) {
+                    used.add(char);
+                }
+            }
+
+            let usedArray = Array.from(used);
+            for (let i = 0; i < 5; i++) {
+                square.push(usedArray.slice(i * 5, (i + 1) * 5));
+            }
+
+            return square;
+        }
+
+        function findInPolybius(square, char) {
+            for (let row = 0; row < 5; row++) {
+                for (let col = 0; col < 5; col++) {
+                    if (square[row][col] === char) {
+                        return { row, col };
+                    }
+                }
+            }
+            return { row: 0, col: 0 };
+        }
+
+        function tryDecrypt() {
+            const cipherType = document.getElementById('cipherType').value;
+            const key = document.getElementById('keyInput').value;
+            let result = '';
+
+            if (!key) {
+                document.getElementById('manualResult').textContent = 'Please enter a key!';
+                return;
+            }
+
+            switch(cipherType) {
+                case 'vigenere':
+                    result = vigenereDecrypt(cleanText, key);
+                    break;
+                case 'playfair':
+                    result = playfairDecrypt(cleanText, key);
+                    break;
+                case 'caesar':
+                    result = caesarDecrypt(cleanText, parseInt(key) || 0);
+                    break;
+                case 'bifid':
+                    result = bifidDecrypt(cleanText, key);
+                    break;
+                default:
+                    result = 'Cipher type not yet implemented';
+            }
+
+            document.getElementById('manualResult').textContent = result;
+        }
+
+        function tryKey(key) {
+            document.getElementById('keyInput').value = key;
+            tryDecrypt();
+        }
+
+        async function autoSolve() {
+            const statusDiv = document.getElementById('autoStatus');
+            const attemptsList = document.getElementById('attemptsList');
+
+            statusDiv.innerHTML = '<div class="auto-solve-status solving">🔍 Analyzing cipher...</div>';
+            attemptsList.innerHTML = '';
+
+            const keys = ['ODIN', 'LOKI', 'BALDR', 'HUGINN', 'MUNINN', 'YGGDRASIL', 'RAGNAROK',
+                         'ODINHUGINNMUNINN', 'LOKIBALDR', 'ODINLOKI', 'THOR', 'FREYA', 'FRIGG'];
+            const ciphers = ['vigenere', 'playfair', 'bifid'];
+
+            let attemptCount = 0;
+
+            for (let cipher of ciphers) {
+                for (let key of keys) {
+                    attemptCount++;
+                    await new Promise(resolve => setTimeout(resolve, 50));
+
+                    let result = '';
+                    switch(cipher) {
+                        case 'vigenere':
+                            result = vigenereDecrypt(cleanText, key);
+                            break;
+                        case 'playfair':
+                            result = playfairDecrypt(cleanText, key);
+                            break;
+                        case 'bifid':
+                            result = bifidDecrypt(cleanText, key);
+                            break;
+                    }
+
+                    const readable = calculateReadability(result);
+
+                    const attemptDiv = document.createElement('div');
+                    attemptDiv.className = 'attempt-item';
+                    attemptDiv.innerHTML = `
+                        <div class="attempt-header">Attempt #${attemptCount}: ${cipher.toUpperCase()} + ${key}</div>
+                        <div>Result: ${result.substring(0, 100)}${result.length > 100 ? '...' : ''}</div>
+                        <div>Readability Score: ${readable.toFixed(2)}%</div>
+                    `;
+
+                    attemptsList.insertBefore(attemptDiv, attemptsList.firstChild);
+
+                    if (readable > 60 || result.includes('CONGRATULATIONS') || result.includes('WELL DONE')) {
+                        attemptDiv.style.background = 'rgba(76, 175, 80, 0.3)';
+                        attemptDiv.style.borderColor = '#4CAF50';
+                        statusDiv.innerHTML = `<div class="auto-solve-status success">✅ Possible solution found!</div>`;
+                    }
+                }
+            }
+
+            // Try Caesar with all shifts
+            for (let shift = 1; shift < 26; shift++) {
+                attemptCount++;
+                await new Promise(resolve => setTimeout(resolve, 30));
+
+                const result = caesarDecrypt(cleanText, shift);
+                const readable = calculateReadability(result);
+
+                const attemptDiv = document.createElement('div');
+                attemptDiv.className = 'attempt-item';
+                attemptDiv.innerHTML = `
+                    <div class="attempt-header">Attempt #${attemptCount}: CAESAR shift ${shift}</div>
+                    <div>Result: ${result.substring(0, 100)}${result.length > 100 ? '...' : ''}</div>
+                    <div>Readability Score: ${readable.toFixed(2)}%</div>
+                `;
+
+                attemptsList.insertBefore(attemptDiv, attemptsList.firstChild);
+
+                if (readable > 60) {
+                    attemptDiv.style.background = 'rgba(76, 175, 80, 0.3)';
+                    attemptDiv.style.borderColor = '#4CAF50';
+                }
+            }
+
+            statusDiv.innerHTML += `<div class="auto-solve-status">Tried ${attemptCount} different combinations. Check results above for readable text.</div>`;
+        }
+
+        function calculateReadability(text) {
+            const commonWords = ['THE', 'AND', 'FOR', 'ARE', 'BUT', 'NOT', 'YOU', 'ALL', 'CAN', 'HER', 'WAS', 'ONE', 'OUR', 'OUT', 'DAY', 'HAD', 'HAS', 'HIS', 'HOW', 'ITS', 'MAY', 'NEW', 'NOW', 'OLD', 'SEE', 'TWO', 'WAY', 'WHO', 'BOY', 'DID', 'GET', 'LET', 'PUT', 'SAY', 'SHE', 'TOO', 'USE'];
+            const commonBigrams = ['TH', 'HE', 'IN', 'ER', 'AN', 'RE', 'ON', 'AT', 'EN', 'ND', 'TI', 'ES', 'OR', 'TE', 'OF', 'ED', 'IS', 'IT', 'AL', 'AR'];
+
+            let score = 0;
+
+            for (let word of commonWords) {
+                if (text.includes(word)) score += 5;
+            }
+
+            for (let bigram of commonBigrams) {
+                const count = (text.match(new RegExp(bigram, 'g')) || []).length;
+                score += count * 2;
+            }
+
+            return Math.min(100, score);
+        }
+
+        function analyzeText() {
+            const analysis = {
+                length: cleanText.length,
+                letterFreq: {},
+                mostCommon: [],
+                repeatedPatterns: []
+            };
+
+            for (let char of cleanText) {
+                if (char.match(/[A-Z]/)) {
+                    analysis.letterFreq[char] = (analysis.letterFreq[char] || 0) + 1;
+                }
+            }
+
+            analysis.mostCommon = Object.entries(analysis.letterFreq)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+
+            // Find repeated patterns
+            for (let len = 2; len <= 5; len++) {
+                const patterns = {};
+                for (let i = 0; i <= cleanText.length - len; i++) {
+                    const pattern = cleanText.substr(i, len);
+                    if (pattern.match(/^[A-Z]+$/)) {
+                        patterns[pattern] = (patterns[pattern] || 0) + 1;
+                    }
+                }
+                const repeated = Object.entries(patterns)
+                    .filter(([p, count]) => count > 1)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 5);
+
+                if (repeated.length > 0) {
+                    analysis.repeatedPatterns.push(...repeated.map(([p, c]) => `${p} (${c}x)`));
+                }
+            }
+
+            let html = `
+                <strong>Text Length:</strong> ${analysis.length} characters<br><br>
+                <strong>Top 10 Letters:</strong><br>
+                ${analysis.mostCommon.map(([char, count]) =>
+                    `${char}: ${count} (${(count/analysis.length*100).toFixed(1)}%)`
+                ).join('<br>')}<br><br>
+                <strong>Repeated Patterns:</strong><br>
+                ${analysis.repeatedPatterns.slice(0, 10).join(', ')}
+            `;
+
+            document.getElementById('analysisResult').innerHTML = html;
+        }
+    </script>
+</body>
+</html>
